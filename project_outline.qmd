@@ -1,0 +1,227 @@
+---
+title: "Project Outline"
+format: html
+editor: visual
+---
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(mapgl)
+library(ggmap)
+library(gganimate)
+library(sf)
+library(dplyr)
+library(viridis)
+library(here)
+
+```
+
+### Kaalawai
+
+```{r}
+
+hawaii_overview <- mapboxgl(
+  zoom = 0.44,
+  center = c(-162.4, 53.7),
+  pitch = 57,
+  bearing = -11.2
+)
+
+
+hawaii_overview |>
+  fly_to(
+    zoom = 19.16,
+    center = c(-157.796598, 21.256627),
+    pitch = 57,
+    bearing = -11.2,
+    duration = 20000
+  )
+
+```
+
+### Oral History Background
+
+### Data Collection Infographic
+
+### Limu Presence by Species over Time
+
+### Rainfall Atlas Data
+
+### New
+
+```{r}
+# Load transect data from your CSV
+transects <- read_csv(here("data/example_transects.csv"))
+
+# Create an sf object for the transects
+transects_sf <- st_as_sf(transects, wkt = "WKT", crs = 4326)
+
+# Inspect the sf object
+print(transects_sf)
+
+```
+
+```{r}
+set.seed(123)
+
+# Create a sequence of dates (500 points for daily data)
+time_series <- seq.Date(from = as.Date("2023-01-01"), by = "day", length.out = 500)
+
+# Function to generate temperature data with daily and seasonal variation
+generate_temperature <- function(n) {
+  seasonal_variation <- 10 * sin(2 * pi * (1:n)/365)  # Seasonal component
+  daily_variation <- rnorm(n, 0, 1)                   # Random daily component
+  base_temperature <- 25                              # Base temperature (°C)
+  base_temperature + seasonal_variation + daily_variation
+}
+
+# Generate temperature for both transects
+temperature_transect1 <- generate_temperature(500)
+temperature_transect2 <- generate_temperature(500)
+
+# Create a tidy data frame for plotting
+temperature_data <- tibble(
+  date = rep(time_series, 2),
+  temperature = c(temperature_transect1, temperature_transect2),
+  transect = rep(c("transect1", "transect2"), each = 500)
+)
+
+# Join temperature data to transect geometry
+transects_sf <- transects_sf %>%
+  left_join(temperature_data, by = c("name" = "transect"))
+
+```
+
+```{r}
+head(transects_sf)
+```
+
+```{r}
+# Set up your coordinates for the map
+lon <- -157.7966
+lat <- 21.257
+
+#register_google("AIzaSyAVNo8B0Quo97QVBIzsIIJh6rQ0vu1J6k4", write = TRUE)
+
+# Get the satellite map
+basemap <- get_map(location = c(lon = lon, lat = lat), zoom = 19, source = "google", maptype = "satellite")
+ggmap(basemap)
+
+```
+
+```{r}
+# Create a static plot with ggmap and geom_sf
+p <- ggmap(basemap) +
+  geom_sf(data = transects_sf, aes(fill = temperature), color = "black", alpha = 0.5) +
+  scale_fill_viridis_c() +
+  labs(title = 'Temperature over time', subtitle = 'Date: {frame_time}', fill = "Temperature (°C)") +
+  theme_minimal()
+
+p
+
+```
+
+```{r}
+# Add animation with gganimate
+p_anim <- p +
+  transition_time(date) +
+  ease_aes('linear') +
+  shadow_mark()
+
+
+
+```
+
+```{r}
+# Render the animation
+animate(p_anim, nframes = 500, fps = 10)
+```
+
+```{r}
+#anim_save("transect_animation.gif", animation = last_animation())
+```
+
+### Shiny
+
+```{r}
+# Load required libraries
+library(shiny)
+library(ggmap)
+library(ggplot2)
+library(dplyr)
+library(sf)
+library(viridis)
+
+# Load your data
+# Assuming transects_sf and temperature_data are already defined in your environment
+
+# Set your coordinates for the map
+lon <- -157.7966
+lat <- 21.257
+
+# Uncomment and set your Google Maps API key
+# register_google("YOUR_API_KEY_HERE", write = TRUE)
+
+# Get the satellite map
+basemap <- get_map(location = c(lon = lon, lat = lat), zoom = 19, source = "google", maptype = "satellite")
+
+# Create the Shiny app UI
+ui <- fluidPage(
+  titlePanel("Temperature Visualization on Satellite Map"),
+  
+  sidebarLayout(
+    sidebarPanel(
+      dateInput("selected_date", "Select Date", 
+                value = min(temperature_data$date), 
+                min = min(temperature_data$date), 
+                max = max(temperature_data$date))
+    ),
+    mainPanel(
+      plotOutput("mapPlot"),
+      plotOutput("lineGraph")
+    )
+  )
+)
+
+# Define Server
+server <- function(input, output) {
+  
+  # Reactive expression to filter temperature data based on selected date
+  filtered_data <- reactive({
+    temperature_data %>% filter(date == input$selected_date)
+  })
+  
+  output$mapPlot <- renderPlot({
+  selected_data <- filtered_data()
+  
+  # First, plot the base map
+  basemap_plot <- ggmap(basemap)
+  
+  # Then, add the `geom_sf` layer for spatial data
+  map_plot <- basemap_plot + 
+    geom_sf(data = transects_sf, aes(geometry = geometry, fill = temperature), color = "black", alpha = 0.5) +
+    geom_sf(data = selected_data, aes(geometry = geometry, fill = temperature), color = "red", size = 2) +
+    scale_fill_viridis_c() +
+    labs(title = paste("Temperature on", input$selected_date), fill = "Temperature (°C)") +
+    theme_minimal()
+  
+  # Print the map plot
+  print(map_plot)
+}) 
+  
+  # Render the line graph
+  output$lineGraph <- renderPlot({
+    ggplot(temperature_data, aes(x = date, y = temperature, color = transect)) +
+      geom_line(size = 1) +
+      geom_point(data = filtered_data(), size = 3) +
+      labs(title = "Temperature Over Time", x = "Date", y = "Temperature (°C)", color = "Transect") +
+      theme_minimal() +
+      scale_color_viridis_d()
+  })
+}
+
+# Run the app
+shinyApp(ui, server)
+
+
+```
