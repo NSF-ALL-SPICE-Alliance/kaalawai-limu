@@ -1,0 +1,26 @@
+---
+title: "kaalawai_limu_analysis"
+format: html
+editor: visual
+---
+
+## ![]()Libraries
+
+```{r}
+library(plotly)
+library(tidyverse)
+library(janitor)
+library(here)
+```
+
+```{r}
+kaalawai_data <- read_csv("limu_master.csv")
+```
+
+```{r}
+clean_names(kaalawai_data)
+```
+
+```{r}
+skim_limu <- skimr::skim(kaalawai_data)
+```
