@@ -33,3 +33,7 @@ rainfall <- read_csv("rainfall_niuvalley.csv")
 ```{r}
 summary(rainfall)
 ```
+
+```{r}
+transect_data <- read_csv("Kaalawai-base1.csv")
+```
