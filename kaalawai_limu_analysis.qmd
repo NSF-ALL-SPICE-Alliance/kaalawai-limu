@@ -18,9 +18,18 @@ kaalawai_data <- read_csv("limu_master.csv")
 ```
 
 ```{r}
-clean_names(kaalawai_data)
+kaalawai_data <- clean_names(kaalawai_data)
 ```
 
 ```{r}
 skim_limu <- skimr::skim(kaalawai_data)
+```
+
+```{r}
+rainfall <- read_csv("rainfall_niuvalley.csv")
+
+```
+
+```{r}
+summary(rainfall)
 ```
