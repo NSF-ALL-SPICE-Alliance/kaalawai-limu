@@ -11,6 +11,12 @@ library(plotly)
 library(tidyverse)
 library(janitor)
 library(here)
+library(ggmap)
+library(ggplot2)
+library(dplyr)
+library(mapgl)
+library(gganimate)
+library(sf)
 ```
 
 ```{r}
@@ -36,4 +42,81 @@ summary(rainfall)
 
 ```{r}
 transect_data <- read_csv("Kaalawai-base1.csv")
+```
+
+```{r}
+# Load transect data from your CSV
+transects <- read_csv(here("Kaalawai-base1.csv"))
+
+# Create an sf object for the transects
+transects_sf <- st_as_sf(transects, wkt = "WKT", crs = 4326)
+
+# Inspect the sf object
+print(transects_sf)
+
+```
+
+```{r}
+set.seed(123)
+
+# Create a sequence of dates (500 points for daily data)
+time_series <- seq.Date(from = as.Date("2023-01-01"), by = "day", length.out = 500)
+
+# Function to generate temperature data with daily and seasonal variation
+generate_temperature <- function(n) {
+  seasonal_variation <- 10 * sin(2 * pi * (1:n)/365)  # Seasonal component
+  daily_variation <- rnorm(n, 0, 1)                   # Random daily component
+  base_temperature <- 25                              # Base temperature (°C)
+  base_temperature + seasonal_variation + daily_variation
+}
+
+# Generate temperature for both transects
+temperature_transect1 <- generate_temperature(500)
+temperature_transect2 <- generate_temperature(500)
+
+# Create a tidy data frame for plotting
+temperature_data <- tibble(
+  date = rep(time_series, 2),
+  temperature = c(temperature_transect1, temperature_transect2),
+  transect = rep(c("transect1", "transect2"), each = 500)
+)
+
+# Join temperature data to transect geometry
+transects_sf <- transects_sf %>%
+  left_join(temperature_data, by = c("name" = "transect"))
+
+```
+
+```{r}
+head(transects_sf)
+```
+
+```{r}
+# Set up your coordinates for the map
+lon <- -157.7966
+lat <- 21.257
+
+register_google("AIzaSyAVNo8B0Quo97QVBIzsIIJh6rQ0vu1J6k4", write = TRUE)
+
+# Get the satellite map
+basemap <- get_map(location = c(lon = lon, lat = lat), zoom = 19, source = "google", maptype = "satellite")
+ggmap(basemap)
+
+```
+
+```{r}
+p <- ggmap(basemap) +
+  geom_sf(data = transects_sf, aes(fill = temperature), color = "black", alpha = 0.5) +
+  scale_fill_viridis_c() +
+  labs(title = 'Temperature over time', subtitle = 'Date: {frame_time}', fill = "Temperature (°C)") +
+  theme_minimal()
+
+
+```
+
+```{r}
+p_anim <- p +
+  transition_time(date) +
+  ease_aes('linear') +
+  shadow_mark()
 ```
