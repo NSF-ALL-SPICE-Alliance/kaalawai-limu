@@ -4,7 +4,9 @@ format: html
 editor: visual
 ---
 
-## ![]()Libraries
+## ![]()Lets take a look at some water temperature data collected by HOBO loggers at Kaalawai. 
+
+## Libraries
 
 ```{r}
 library(plotly)
@@ -19,17 +21,27 @@ library(gganimate)
 library(sf)
 ```
 
+### First lets read in our data. 
+
+This data was collected by student within Chaminades School of Natural Sciences and Mathematics. Within this data temperature, salinity, turbidity, and depth were calculated. In this visualization we will just be looking at temperature.
+
 ```{r}
 kaalawai_data <- read_csv("limu_master.csv")
 ```
+
+Lets clean the name columns.
 
 ```{r}
 kaalawai_data <- clean_names(kaalawai_data)
 ```
 
+To get an idea of what we are working with lets use the skimr function.
+
 ```{r}
 skim_limu <- skimr::skim(kaalawai_data)
 ```
+
+It could be interesting to look at rainfall in the area so lets read in some rainfall data.
 
 ```{r}
 rainfall <- read_csv("rainfall_niuvalley.csv")
@@ -40,8 +52,10 @@ rainfall <- read_csv("rainfall_niuvalley.csv")
 summary(rainfall)
 ```
 
+In order to create a compelling visual representation lets use some transect data we made in Google maps to depict the research site. Lets read in the transect data and create a SF object that will help us combine the temperature data.
+
 ```{r}
-transect_data <- read_csv("Kaalawai-base1.csv")
+transect_data <- read_csv("Kaalawai-base1.csv")   # create a data frame from the transects made in google maps
 ```
 
 ```{r}
@@ -54,9 +68,10 @@ transects_sf <- st_as_sf(transects, wkt = "WKT", crs = 4326)
 # Inspect the sf object
 print(transects_sf)
 
+
 ```
 
-Joining
+Now we are going to join the transect data with the temperature data.
 
 ```{r}
 library(dplyr)
@@ -82,32 +97,41 @@ head(kaalawai_joined)
 ```
 
 ```{r}
-class(kaalawai_joined)
+class(kaalawai_joined) # looking at what was the result of the class object in this data frame
 ```
 
 ```{r}
-kaalawai_joined_sf <- st_sf(kaalawai_joined, crs = 4326)
+kaalawai_joined_sf <- st_sf(kaalawai_joined, crs = 4326)  #
 ```
 
+Lets generate the map and combine the transect data onto the map.
+
 ```{r}
-lon <- -157.7966
+lon <- -157.7966    #create a lat and lon target
 lat <- 21.257
 
-register_google("AIzaSyAVNo8B0Quo97QVBIzsIIJh6rQ0vu1J6k4", write = TRUE)
+register_google("AIzaSyAVNo8B0Quo97QVBIzsIIJh6rQ0vu1J6k4", write = TRUE)  #register the google API key
 
 # Get the satellite map
 basemap <- get_map(location = c(lon = lon, lat = lat), zoom = 19, source = "google", maptype = "satellite")
 ggmap(basemap)
 ```
 
+Lets change the dates to be uniform throughout the data.
+
 ```{r}
 kaalawai_joined_sf <- kaalawai_joined_sf %>%
-  mutate(date_time = ymd(date_time))
+  mutate(date_time = ymd(date_time))  #change the date to fit the data
 ```
 
 ```{r}
 kaalawai_joined_sf$temperature_a_c_732880 <- as.numeric(kaalawai_joined_sf$temperature_a_c_732880)
+
+#
+
 ```
+
+Lets create a data frame p
 
 ```{r}
 p <- ggmap(basemap) +
@@ -115,6 +139,8 @@ p <- ggmap(basemap) +
   scale_fill_viridis_c() +
   labs(title = 'Temperature over time', subtitle = 'Date: {frame_time}', fill = "Temperature (°C)") +
   theme_minimal()
+
+#created a static plot for the data to be applied to
 ```
 
 ```{r}
@@ -122,73 +148,9 @@ p_anim <- p +
   transition_time(date_time) +
   ease_aes('linear') +
   shadow_mark()
+#add animation
 ```
 
 ```{r}
-animate(p_anim, nframes = 10, fps = 1)
-```
-
-```{r}
-set.seed(123)
-
-# Create a sequence of dates (500 points for daily data)
-time_series <- seq.Date(from = as.Date("2023-01-01"), by = "day", length.out = 500)
-
-# Function to generate temperature data with daily and seasonal variation
-generate_temperature <- function(n) {
-  seasonal_variation <- 10 * sin(2 * pi * (1:n)/365)  # Seasonal component
-  daily_variation <- rnorm(n, 0, 1)                   # Random daily component
-  base_temperature <- 25                              # Base temperature (°C)
-  base_temperature + seasonal_variation + daily_variation
-}
-
-# Generate temperature for both transects
-temperature_transect1 <- generate_temperature(500)
-temperature_transect2 <- generate_temperature(500)
-
-# Create a tidy data frame for plotting
-temperature_data <- tibble(
-  date = rep(time_series, 2),
-  temperature = c(temperature_transect1, temperature_transect2),
-  transect = rep(c("transect1", "transect2"), each = 500)
-)
-
-# Join temperature data to transect geometry
-transects_sf <- transects_sf %>%
-  left_join(temperature_data, by = c("name" = "transect"))
-
-```
-
-```{r}
-head(transects_sf)
-```
-
-```{r}
-# Set up your coordinates for the map
-lon <- -157.7966
-lat <- 21.257
-
-register_google("AIzaSyAVNo8B0Quo97QVBIzsIIJh6rQ0vu1J6k4", write = TRUE)
-
-# Get the satellite map
-basemap <- get_map(location = c(lon = lon, lat = lat), zoom = 19, source = "google", maptype = "satellite")
-ggmap(basemap)
-
-```
-
-```{r}
-p <- ggmap(basemap) +
-  geom_sf(data = transects_sf, aes(fill = temperature), color = "black", alpha = 0.5) +
-  scale_fill_viridis_c() +
-  labs(title = 'Temperature over time', subtitle = 'Date: {frame_time}', fill = "Temperature (°C)") +
-  theme_minimal()
-
-
-```
-
-```{r}
-p_anim <- p +
-  transition_time(date) +
-  ease_aes('linear') +
-  shadow_mark()
+animate(p_anim, nframes = 10, fps = 1) #create animation for the temperature frames
 ```
