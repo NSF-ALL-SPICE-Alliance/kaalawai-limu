@@ -6,6 +6,7 @@ Problem Statement:
 Despite their ecological significance, there is limited research on how temperature and salinity influence the abundance of endemic seaweed species at Kaalawai Beach. With climate change and increasing ocean temperatures, there is an urgent need to monitor these factors and understand their long-term impact on local seaweed populations. Specific species including Halimeda discoidea, Acanthophora spicifera, and Bryopsis Pennata are good indicators of bioproductivity within the area. 
 
 ![Alt Text](kaalawai.old.hawaii.webp)
+[Images of Old Hawaii](https://imagesofoldhawaii.com/ka%CA%BBalawai/)
 
 Objectives
 
