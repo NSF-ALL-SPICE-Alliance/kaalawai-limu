@@ -5,6 +5,8 @@ Kaalawai Beach, known for its unique marine environment, is home to a variety of
 Problem Statement:
 Despite their ecological significance, there is limited research on how temperature and salinity influence the abundance of endemic seaweed species at Kaalawai Beach. With climate change and increasing ocean temperatures, there is an urgent need to monitor these factors and understand their long-term impact on local seaweed populations. Specific species including Halimeda discoidea, Acanthophora spicifera, and Bryopsis Pennata are good indicators of bioproductivity within the area. 
 
+![Alt Text](relative/path/to/kaalawai.old.hawaii.webp)
+
 Objectives
 
 To identify and catalog endemic seaweed species at Kaalawai Beach.
@@ -37,6 +39,7 @@ Seaweed Abundance and Identification
 Method: Manual collection and identification will be conducted bi-monthly, with transects set up in both shallow and intertidal zones at Kaalawai Beach.
 Transect Design: At each sampling event, two transects (50 meters each) will be surveyed at random locations to document species presence, abundance, and coverage.
 Identification: Collected seaweed samples will be identified to species level using local guides and expert consultation. Voucher specimens will be preserved and stored for future reference.
+![Alt Text](relative/path/to/IMG_0025.jpeg)
 
 Data Analysis
 
@@ -53,3 +56,5 @@ Significance of Study
 
 
 Chaminade's school of Natural sciences and mathematics may partake in this study not only to increase the opportunity for students to partake in significant research but also to provide meaningful data to communities and regulatory organizations. This study will generate valuable insights into the effects of environmental variables on endemic seaweed populations, contributing to the broader understanding of marine ecosystem dynamics in Hawaii. The findings will support local conservation efforts and inform sustainable resource management strategies. Leading to a better management of resources such as fish and limu that are traditionally used for sustenance. Additionally, this research aligns with global climate change studies by highlighting the importance of monitoring marine biodiversity. Aligning the focus of SDG goal 13 climate action. By better understanding the effect of climate change on small scale areas like Kaalawai. Insights may bring to light further knowledge on 
+
+![Alt Text](relative/path/to/IMG_0020.jpeg)
