@@ -42,7 +42,6 @@ Method: Manual collection and identification will be conducted bi-monthly, with 
 Transect Design: At each sampling event, two transects (50 meters each) will be surveyed at random locations to document species presence, abundance, and coverage.
 Identification: Collected seaweed samples will be identified to species level using local guides and expert consultation. Voucher specimens will be preserved and stored for future reference.
 
-![Alt Text](IMG_0025.jpeg)
 <img src="IMG_0025.jpeg" alt="Dashboard Screenshot" width="500">
 
 Data Analysis
