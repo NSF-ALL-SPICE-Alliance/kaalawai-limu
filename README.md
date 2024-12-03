@@ -39,6 +39,7 @@ Seaweed Abundance and Identification
 Method: Manual collection and identification will be conducted bi-monthly, with transects set up in both shallow and intertidal zones at Kaalawai Beach.
 Transect Design: At each sampling event, two transects (50 meters each) will be surveyed at random locations to document species presence, abundance, and coverage.
 Identification: Collected seaweed samples will be identified to species level using local guides and expert consultation. Voucher specimens will be preserved and stored for future reference.
+
 ![Alt Text](relative/path/to/IMG_0025.jpeg)
 
 Data Analysis
