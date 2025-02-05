@@ -1,10 +1,21 @@
+
+# Libraries ----
+
 library(tidyverse)
 library(here)
 library(shiny)
 
 
 
-kaalawai_joined_sf <- read_csv(here("data/kaalawai_joined_sf.csv"))
+lon <- -157.7966
+lat <- 21.257
+
+kaalawai_joined_sf <- st_read(here("data/kaalawai_joined_sf.gpkg"))
+
+
+
+
+class(kaalawai_joined_sf)
 
 
 glimpse(kaalawai_joined_sf)
@@ -13,7 +24,7 @@ kaalawai_joined_sf <- kaalawai_joined_sf %>%
   select(-x21, -x22, -x23, -description, -marked)
 
 kaalawai_joined_sf <- kaalawai_joined_sf %>%
-  mutate(across(-c(WKT, name, site, transect, date_time), as.numeric))
+  mutate(across(-c(name, site, transect, date_time, geom), as.numeric))
 
 
 # Extract numeric columns for selection
@@ -111,7 +122,7 @@ server <- function(input, output, session) {
     ggplot(transect_data, aes(x = date_time, y = .data[[input$var]], group = transect, color = highlight)) +
       geom_line(size = 1.2, alpha = 0.7) +
       geom_point(size = 2) +
-      scale_color_manual(values = c("Highlighted" = "red", "Other" = "grey")) +  
+      scale_color_manual(values = c("Highlighted" = "steelblue", "Other" = "grey")) +  
       labs(
         title = "Time Series for All Transects",
         subtitle = if (!is.null(selected_transect)) paste("Hovered Transect:", selected_transect) else "Hover over a transect to highlight",

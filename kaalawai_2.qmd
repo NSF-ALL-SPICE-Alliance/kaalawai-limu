@@ -104,14 +104,21 @@ kaalawai_joined_sf <- kaalawai_joined_sf %>%
 ```
 
 ```{r}
-kaalawai_joined_sf <- kaalawai_joined_sf %>%
-  mutate(temperature_a_c_732880 = ifelse(temperature_a_c_732880 > 50, 
-                                         mean(temperature_a_c_732880[temperature_a_c_732880 <= 50], na.rm = TRUE), 
-                                         temperature_a_c_732880))
+kaalawai_joined_sf$temperature_a_c_732880 <- as.numeric(kaalawai_joined_sf$temperature_a_c_732880)
 ```
 
 ```{r}
-kaalawai_joined_sf$temperature_a_c_732880 <- as.numeric(kaalawai_joined_sf$temperature_a_c_732880)
+kaalawai_joined_sf <- kaalawai_joined_sf %>%
+  filter(temperature_a_c_732880 <= 50 & temperature_a_c_732880 != 0)
+```
+
+```{r}
+# kaalawai_joined_sf <- kaalawai_joined_sf %>% 
+#   filter(transect != "5A" & transect != "5B")
+```
+
+```{r}
+# kaalawai_joined_sf$temperature_a_c_732880 <- as.numeric(kaalawai_joined_sf$temperature_a_c_732880)
 ```
 
 ```{r}
@@ -125,6 +132,10 @@ p <- ggmap(basemap) +
     fill = "Temperature (°C)") +
   theme_minimal()
 p
+```
+
+```{r}
+st_write(kaalawai_joined_sf, here("data/kaalawai_joined_sf.gpkg"), delete_dsn = TRUE)
 ```
 
 ```{r}
