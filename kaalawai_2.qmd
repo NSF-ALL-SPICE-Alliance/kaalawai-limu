@@ -105,6 +105,7 @@ kaalawai_joined_sf <- kaalawai_joined_sf %>%
 
 ```{r}
 kaalawai_joined_sf$temperature_a_c_732880 <- as.numeric(kaalawai_joined_sf$temperature_a_c_732880)
+<<<<<<< HEAD
 ```
 
 ```{r}
@@ -113,6 +114,22 @@ kaalawai_joined_sf <- kaalawai_joined_sf %>%
   temperature_a_c_732880 !=0)
 
 
+=======
+```
+
+```{r}
+kaalawai_joined_sf <- kaalawai_joined_sf %>%
+  filter(temperature_a_c_732880 <= 50 & temperature_a_c_732880 != 0)
+```
+
+```{r}
+# kaalawai_joined_sf <- kaalawai_joined_sf %>% 
+#   filter(transect != "5A" & transect != "5B")
+```
+
+```{r}
+# kaalawai_joined_sf$temperature_a_c_732880 <- as.numeric(kaalawai_joined_sf$temperature_a_c_732880)
+>>>>>>> 96cf3a5d4995e0da99f6f2d6e4ead3e6636a68e4
 ```
 
 ```{r}
@@ -126,6 +143,10 @@ p <- ggmap(basemap) +
     fill = "Temperature (°C)") +
   theme_minimal()
 p
+```
+
+```{r}
+st_write(kaalawai_joined_sf, here("data/kaalawai_joined_sf.gpkg"), delete_dsn = TRUE)
 ```
 
 ```{r}

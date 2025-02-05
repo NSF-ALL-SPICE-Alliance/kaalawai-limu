@@ -4,8 +4,8 @@
 library(tidyverse)
 library(here)
 library(shiny)
-
-
+library(sf)
+library(ggmap)
 
 lon <- -157.7966
 lat <- 21.257
