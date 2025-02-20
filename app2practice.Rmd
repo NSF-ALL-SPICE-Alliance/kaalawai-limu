@@ -1,0 +1,61 @@
+---
+title: "app2practice"
+format: html
+editor: visual
+---
+
+
+```{r}
+library(plotly)
+library(tidyverse)
+library(janitor)
+library(here)
+library(ggmap)
+library(ggplot2)
+library(dplyr)
+library(mapgl)
+library(gganimate)
+library(sf)
+```
+
+```{r}
+kaalawai_data <- read_csv("limu_master.csv")
+
+limu_density <- read_csv("limu_master_density.csv")
+```
+
+
+```{r}
+limu_density <- janitor::clean_names(limu_density)
+```
+
+```{r}
+kaalawai_joined$halimeda_discoidea <- NA
+```
+
+```{r}
+new_density_data_joined <- full_join(
+  kaalawai_joined, 
+  limu_density, by=c("date_time", "transect", "site")
+)
+```
+
+clean the names for the data frame
+```{r}
+new_density_data_joined <- new_density_data_joined %>%
+  
+  rename ("Turbidity" = turbidity_ntu_895841,"Salinity" = salinity_psu_749968, "PH" = p_h_p_h_723485, "Density" = density_g_cm_a3_749968, "Tempurature" = temperature_a_c_732880, "Depth" = depth_ft_729320, "Conductivity" = actual_conductivity_am_s_cm_749968, "resistivity" = resistivity_i_c_a_cm_749968, "Disolved Solids" = total_dissolved_solids_ppt_749968, "pressure" = pressure_psi_729320)
+```
+
+```{r}
+kaalawai_joined_sf <- kaalawai_joined_sf %>%
+  
+  rename ("Turbidity" = turbidity_ntu_895841,"Salinity" = salinity_psu_749968, "PH" = p_h_p_h_723485, "Density" = density_g_cm_a3_749968, "Tempurature" = temperature_a_c_732880, "Depth" = depth_ft_729320, "Conductivity" = actual_conductivity_am_s_cm_749968, "resistivity" = resistivity_i_c_a_cm_749968, "Disolved Solids" = total_dissolved_solids_ppt_749968, "pressure" = pressure_psi_729320)
+```
+
+remove unwanted columns 
+```{r}
+sorted_columns_kaalawai_joined_sf <- kaalawai_joined_sf %>%
+  select("Turbidity")
+```
+
