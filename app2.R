@@ -7,6 +7,8 @@ library(sf)
 library(ggmap)
 library(janitor)
 
+options(scipen = 99)
+
 lon <- -157.7966
 lat <- 21.257
 
@@ -24,11 +26,11 @@ kaalawai_joined_sf <- kaalawai_joined_sf %>%
   mutate(across(-c(name, site, transect, date_time, geom), as.numeric))
 
 kaalawai_joined_sf <- kaalawai_joined_sf %>%
-  rename ("Turbidity" = turbidity_ntu_895841,"Salinity" = salinity_psu_749968, 
+  rename("Turbidity" = turbidity_ntu_895841,"Salinity" = salinity_psu_749968, 
           "PH" = p_h_p_h_723485, "Density" = density_g_cm_a3_749968, "Temperature" = temperature_a_c_732880,
           "Depth" = depth_ft_729320, "Conductivity" = actual_conductivity_am_s_cm_749968, "resistivity" = resistivity_i_c_a_cm_749968,
-          "Dissolved Solids" = total_dissolved_solids_ppt_749968, "pressure" = pressure_psi_729320, "Halimeda discoidea" = halimeda_discoidea.y, "Gelidium corneum" = gelidium_corneum,
-          "Turbinaria ornata" = turbinaria_ornata, "Acanthophora specifera" = acanthophora_spicifera, "Bryopsis pennata" = bryopsis_pennata)
+          "Dissolved_Solids" = total_dissolved_solids_ppt_749968, "pressure" = pressure_psi_729320, "Halimeda_discoidea" = halimeda_discoidea.y, "Gelidium_corneum" = gelidium_corneum,
+          "Turbinaria_ornata" = turbinaria_ornata, "Acanthophora_specifera" = acanthophora_spicifera, "Bryopsis_pennata" = bryopsis_pennata)
 ######I want to select specifc colums to show on the app but im not sure naming the data frame the same thing will mess with retrieving the raw data again.
 #kaalawai_joined_sf <- kaalawai_joined_sf %>%
   #select("Turbidity","Salinity", "PH", "Density", "Temperature","Depth", "Conductivity", "resistivity","Dissolved Solids" , "pressure", "Halimeda discoidea")
@@ -36,11 +38,17 @@ kaalawai_joined_sf <- kaalawai_joined_sf %>%
 
 # Extract numeric columns for selection
 numeric_vars <- kaalawai_joined_sf %>%
-  select(where(is.numeric)) %>%
+  select(Turbidity, Salinity, PH, Temperature, Depth, Conductivity,
+         Dissolved_Solids, pressure, Halimeda_discoidea, 
+         Acanthophora_specifera, Bryopsis_pennata) %>%
   colnames()
 
 # Extract unique dates
 dates <- unique(kaalawai_joined_sf$date_time)
+
+# Filter outlier variables
+
+
 
 # Define UI
 ui <- fluidPage(
