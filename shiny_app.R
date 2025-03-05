@@ -6,6 +6,7 @@ library(shiny)
 library(sf)
 library(ggmap)
 library(janitor)
+library(bslib)
 
 options(scipen = 99)
 
@@ -34,7 +35,13 @@ dates <- unique(kaalawai_joined_sf$date_time)
 
 # Define UI
 ui <- fluidPage(
-  titlePanel("Kaalawai Data Visualization"),
+  theme = bs_theme(version = 5, bootswatch = "sandstone"),
+  tags$div(
+    style = "display: flex; align-items: center;",
+    img(src = "SpiceLogo1.png", height = "80px", style = "margin-right: 10px;"), 
+    img(src = "cuh_logo.png", height = "80px")
+  ),
+  titlePanel("Kaalawai Data Dashboard"),
   sidebarLayout(
     sidebarPanel(
       selectInput("var", "Select a variable:", choices = numeric_vars, selected = "temperature_C"),
