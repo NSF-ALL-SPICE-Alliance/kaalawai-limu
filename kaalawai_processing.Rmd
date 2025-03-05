@@ -1,0 +1,187 @@
+---
+title: "kaalawai_2"
+format: html
+editor: visual
+---
+
+```{r}
+library(plotly)
+library(tidyverse)
+library(janitor)
+library(here)
+library(ggmap)
+library(ggplot2)
+library(dplyr)
+library(mapgl)
+library(gganimate)
+library(sf)
+```
+
+```{r}
+kaalawai_data <- read_csv("data/kaalawai_variable_data.csv")
+```
+
+
+```{r}
+kaalawai_data <- kaalawai_data %>% 
+  clean_names()
+```
+
+```{r}
+kaalawai_data <- kaalawai_data %>% 
+  select(-marked, -x21, -x22, -x23)
+```
+
+
+```{r}
+
+kaalawai_data <- kaalawai_data %>%
+  rename(
+    turbidity_ntu = turbidity_ntu_895841,
+    salinity_psu = salinity_psu_749968,
+    pH = p_h_p_h_723485,
+    density_g_cm3 = density_g_cm_a3_749968,
+    temperature_C = temperature_a_c_732880,
+    depth_ft = depth_ft_729320,
+    conductivity_mS_cm = actual_conductivity_am_s_cm_749968,
+    resistivity_ohm_cm = resistivity_i_c_a_cm_749968,
+    total_dissolved_solids_ppt = total_dissolved_solids_ppt_749968,
+    pressure_psi = pressure_psi_729320,
+    specific_conductivity_mS_cm = specific_conductivity_am_s_cm_749968,
+    orp_mV = orp_m_v_723485,
+    external_voltage_V = external_voltage_v_732880,
+    barometric_pressure_mbar = barometric_pressure_mbar_748439,
+    secondary_temperature_C = temperature_a_c_748439,
+  )
+
+```
+
+```{r}
+kaalawai_data$date_time <- mdy(kaalawai_data$date_time)
+```
+
+```{r}
+kaalawai_data <- kaalawai_data %>%
+  mutate(
+    across(
+      c(
+        turbidity_ntu, salinity_psu, pH, density_g_cm3, temperature_C, depth_ft,
+        conductivity_mS_cm, resistivity_ohm_cm, total_dissolved_solids_ppt, pressure_psi,
+        specific_conductivity_mS_cm, orp_mV, external_voltage_V, barometric_pressure_mbar,
+        secondary_temperature_C
+      ),
+      as.numeric
+    )
+  )
+```
+
+
+
+
+```{r}
+
+
+
+kaalawai_data <- kaalawai_data %>%
+  mutate(
+    turbidity_ntu = ifelse(turbidity_ntu <= 0 | turbidity_ntu > 100, NA, turbidity_ntu),
+    salinity_psu = ifelse(salinity_psu <= 0 | salinity_psu > 45, NA, salinity_psu),
+    pH = ifelse(pH <= 0 | pH < 6 | pH > 9, NA, pH),
+    density_g_cm3 = ifelse(density_g_cm3 <= 0 | density_g_cm3 < 0.9 | density_g_cm3 > 1.1, NA, density_g_cm3),
+    temperature_C = ifelse(temperature_C <= 0 | temperature_C > 40, NA, temperature_C),
+    depth_ft = ifelse(depth_ft < 0 | depth_ft > 19, NA, depth_ft),  # Keep 0 since it means surface
+    conductivity_mS_cm = ifelse(conductivity_mS_cm <= 0 | conductivity_mS_cm > 70000, NA, conductivity_mS_cm),
+    resistivity_ohm_cm = ifelse(resistivity_ohm_cm <= 0 | resistivity_ohm_cm > 50000, NA, resistivity_ohm_cm),
+    total_dissolved_solids_ppt = ifelse(total_dissolved_solids_ppt <= 0 | total_dissolved_solids_ppt > 50, NA, total_dissolved_solids_ppt),
+    pressure_psi = ifelse(pressure_psi <= 0 | pressure_psi > 19, NA, pressure_psi),
+    specific_conductivity_mS_cm = ifelse(specific_conductivity_mS_cm <= 1 | specific_conductivity_mS_cm > 70000, NA, specific_conductivity_mS_cm),
+    orp_mV = ifelse(orp_mV <= 0 | orp_mV < -500 | orp_mV > 500, NA, orp_mV),
+    external_voltage_V = ifelse(external_voltage_V <= 0 | external_voltage_V > 20, NA, external_voltage_V),
+    barometric_pressure_mbar = ifelse(barometric_pressure_mbar <= 0 | barometric_pressure_mbar < 900 | barometric_pressure_mbar > 1100, NA, barometric_pressure_mbar),
+    secondary_temperature_C = ifelse(secondary_temperature_C <= 0 | secondary_temperature_C > 40, NA, secondary_temperature_C),
+    bga_pe_fluorescence_rfu_1056293 = ifelse(bga_pe_fluorescence_rfu_1056293 <= 0, NA, bga_pe_fluorescence_rfu_1056293)
+  )
+
+
+
+
+
+```
+
+
+
+
+
+```{r}
+# Load transect data from your CSV
+transects <- read_csv(here("data/Kaalawai-base1.csv"))
+
+# Create an sf object for the transects
+transects_sf <- st_as_sf(transects, wkt = "WKT", crs = 4326)
+
+# Inspect the sf object
+print(transects_sf)
+
+```
+
+
+```{r}
+
+
+# Create a 'name' column in kaalawai_data based on 'transect'
+kaalawai_data <- kaalawai_data %>%
+  mutate(name = case_when(
+    str_starts(transect, "1") ~ "Transect 1",
+    str_starts(transect, "2") ~ "Transect 2",
+    str_starts(transect, "3") ~ "Transect 3",
+    str_starts(transect, "4") ~ "Transect 4",
+    str_starts(transect, "5") ~ "Transect 5",
+    TRUE ~ NA_character_  # Handle cases where transect is NA or unexpected
+  ))
+
+# Perform the join with transects_sf
+kaalawai_data_with_transects <- kaalawai_data %>%
+  inner_join(transects_sf, by = "name")
+
+
+```
+
+```{r}
+class(kaalawai_data_with_transects)
+```
+
+```{r}
+kaalawai_data_with_transects_sf <- st_sf(kaalawai_data_with_transects, crs = 4326)
+```
+
+```{r}
+lon <- -157.7966
+lat <- 21.257
+
+register_google("AIzaSyAVNo8B0Quo97QVBIzsIIJh6rQ0vu1J6k4", write = TRUE)
+
+# Get the satellite map
+basemap <- get_map(location = c(lon = lon, lat = lat), zoom = 19, source = "google", maptype = "satellite")
+ggmap(basemap)
+```
+
+
+
+```{r}
+p <- ggmap(basemap) +
+  geom_sf(data = kaalawai_data_with_transects_sf, aes(fill = temperature_C), 
+          color = "black", alpha = 0.5) +
+  scale_fill_viridis_c() +
+  labs(
+    title = 'Temperature over time',
+    subtitle = 'Date: {frame_time}',
+    fill = "Temperature (°C)") +
+  theme_minimal()
+p
+```
+
+```{r}
+st_write(kaalawai_data_with_transects_sf, here("data/kaalawai_data_with_transects_sf.gpkg"), delete_dsn = TRUE)
+```
+
+

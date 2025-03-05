@@ -1,0 +1,53 @@
+---
+title: "app2practice"
+format: html
+editor: visual
+---
+
+```{r}
+library(plotly)
+library(tidyverse)
+library(janitor)
+library(here)
+library(ggmap)
+library(ggplot2)
+library(dplyr)
+library(mapgl)
+library(gganimate)
+library(sf)
+```
+
+```{r}
+limu_density <- read_csv("data/limu_master_density.csv")
+
+kaalawai_joined <- st_read("data/kaalawai_data_with_transects_sf.gpkg")
+```
+
+
+```{r}
+limu_density <- limu_density %>% 
+  clean_names() %>% 
+  select(-x9, -x10, -x11, -x12)
+```
+
+
+```{r}
+limu_density$date_time <- mdy(limu_density$date_time)
+```
+
+
+```{r}
+new_density_data_joined <- full_join(
+  kaalawai_joined, 
+  limu_density, by=c("date_time", "transect", "site")
+)
+```
+
+
+
+```{r}
+st_write(new_density_data_joined, here("data/kaalawai_data_limu_presence.gpkg"), delete_dsn = TRUE)
+```
+
+
+

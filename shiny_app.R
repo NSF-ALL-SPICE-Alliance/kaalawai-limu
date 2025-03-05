@@ -1,4 +1,3 @@
-
 # Libraries ----
 
 library(tidyverse)
@@ -6,41 +5,39 @@ library(here)
 library(shiny)
 library(sf)
 library(ggmap)
+library(janitor)
+
+options(scipen = 99)
 
 lon <- -157.7966
 lat <- 21.257
 
-kaalawai_joined_sf <- st_read(here("data/kaalawai_joined_sf.gpkg"))
-
-
-
-
-class(kaalawai_joined_sf)
-
-
-glimpse(kaalawai_joined_sf)
-
-kaalawai_joined_sf <- kaalawai_joined_sf %>% 
-  select(-x21, -x22, -x23, -description, -marked)
-
-kaalawai_joined_sf <- kaalawai_joined_sf %>%
-  mutate(across(-c(name, site, transect, date_time, geom), as.numeric))
+kaalawai_joined_sf <- st_read(here("data/kaalawai_data_limu_presence.gpkg"))
 
 
 # Extract numeric columns for selection
 numeric_vars <- kaalawai_joined_sf %>%
-  select(where(is.numeric)) %>%
+  select(turbidity_ntu, salinity_psu, pH, density_g_cm3, temperature_C, depth_ft,
+         conductivity_mS_cm, resistivity_ohm_cm, total_dissolved_solids_ppt, 
+         pressure_psi, specific_conductivity_mS_cm, orp_mV, external_voltage_V, 
+         barometric_pressure_mbar, secondary_temperature_C, bga_pe_fluorescence_rfu_1056293, 
+         gelidium_corneum, halimeda_discoidea, turbinaria_ornata, acanthophora_spicifera, 
+         bryopsis_pennata) %>%
   colnames()
 
 # Extract unique dates
 dates <- unique(kaalawai_joined_sf$date_time)
+
+# Filter outlier variables
+
+
 
 # Define UI
 ui <- fluidPage(
   titlePanel("Kaalawai Data Visualization"),
   sidebarLayout(
     sidebarPanel(
-      selectInput("var", "Select a variable:", choices = numeric_vars, selected = "temperature_a_c_732880"),
+      selectInput("var", "Select a variable:", choices = numeric_vars, selected = "temperature_C"),
       selectInput("date", "Select a date:", choices = dates)
     ),
     mainPanel(
@@ -136,3 +133,4 @@ server <- function(input, output, session) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)
+
