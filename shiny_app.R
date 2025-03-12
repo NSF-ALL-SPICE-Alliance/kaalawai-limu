@@ -7,11 +7,12 @@ library(sf)
 library(ggmap)
 library(janitor)
 library(bslib)
+library(fontawesome)
 
 options(scipen = 99)
 
-lon <- -157.7966
-lat <- 21.257
+lon <<- -157.7966  # Use `<<-` to ensure global scope
+lat <<- 21.257
 
 kaalawai_joined_sf <- st_read(here("data/kaalawai_data_limu_presence.gpkg"))
 
@@ -33,23 +34,57 @@ dates <- unique(kaalawai_joined_sf$date_time)
 
 
 
-# Define UI
 ui <- fluidPage(
   theme = bs_theme(version = 5, bootswatch = "sandstone"),
-  tags$div(
-    style = "display: flex; align-items: center;",
-    img(src = "SpiceLogo1.png", height = "80px", style = "margin-right: 10px;"), 
-    img(src = "cuh_logo.png", height = "80px")
+  
+  # Load FontAwesome manually (fallback in case {fontawesome} package doesn't work)
+  tags$head(
+    tags$link(rel = "stylesheet", href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css")
   ),
-  titlePanel("Kaalawai Data Dashboard"),
+  
+  # Enlarge text, dropdowns, and adjust UI layout
+  tags$style(HTML("
+    body { font-size: 36px; }  
+    .sidebarPanel, .mainPanel { font-size: 36px; } 
+    .shiny-input-container { font-size: 36px !important; }  
+    .selectize-input, .shiny-input-container select { font-size: 36px !important; height: 50px; }  
+    .selectize-dropdown, .selectize-dropdown-content div { font-size: 36px !important; }  /* Enlarges dropdown options */
+    h1, h2, h3 { font-size: 48px; }  
+    .shiny-plot-output { width: 110%; height: auto; }  
+")),
+  
+  # Logo + GitHub link section
+  tags$div(
+    style = "display: flex; align-items: center; gap: 20px;",
+    
+    # Spice & CUH Logos
+    img(src = "SpiceLogo1.png", height = "100px", style = "margin-right: 10px;"), 
+    img(src = "cuh_logo.png", height = "100px"),
+    
+    # GitHub Logo - Preferred Method using fontawesome::fa()
+    tags$a(
+      href = "https://github.com/NSF-ALL-SPICE-Alliance/kaalawai-limu", 
+      target = "_blank",
+      fa("github", fill = "black", height = "50px")
+    ),
+    
+    # GitHub Logo - Fallback Method using raw FontAwesome
+    # tags$a(
+    #   href = "https://github.com/NSF-ALL-SPICE-Alliance/kaalawai-limu", 
+    #   target = "_blank",
+    #   tags$i(class = "fab fa-github")
+    # )
+  ),
+  titlePanel(""),
   sidebarLayout(
     sidebarPanel(
-      selectInput("var", "Select a variable:", choices = numeric_vars, selected = "temperature_C"),
-      selectInput("date", "Select a date:", choices = dates)
+      selectInput("var", "Select a variable:", choices = numeric_vars, selected = "bryopsis_pennata"),
+      selectInput("date", "Select a date:", choices = dates),
+      width = 3  # Adjust sidebar width
     ),
     mainPanel(
-      plotOutput("mapPlot", hover = hoverOpts(id = "plot_hover")), # Enable hover
-      plotOutput("linePlot")  # Line graph for all transects
+      plotOutput("mapPlot", hover = hoverOpts(id = "plot_hover"), height = "1200px"), # Make map larger
+      plotOutput("linePlot", height = "800px")  # Make line plot larger
     )
   )
 )
@@ -57,10 +92,12 @@ ui <- fluidPage(
 # Define Server
 server <- function(input, output, session) {
   # Get Google Map
-  lon <- -157.7966
-  lat <- 21.257
+  # lon <- -157.7966
+  # lat <- 21.257
   
   basemap <- reactive({
+    # lon <- -157.7966  # Define inside the function
+    # lat <- 21.257
     get_map(location = c(lon = lon, lat = lat), zoom = 19, source = "google", maptype = "satellite")
   })
   
@@ -76,14 +113,31 @@ server <- function(input, output, session) {
     
     ggmap(basemap()) +
       geom_sf(data = filtered_data(), aes_string(fill = input$var), color = "black", alpha = 0.5) +
-      scale_fill_viridis_c() +
-      labs(
-        title = 'Variable Visualization',
-        subtitle = paste("Date:", input$date),
-        fill = input$var
+      scale_fill_viridis_c(
+        guide = guide_colourbar(
+          barwidth = 2,  # Increase width of color bar
+          barheight = 20,  # Increase height of color bar
+          title.theme = element_text(size = 36, face = "bold"),  # Enlarge legend title
+          label.theme = element_text(size = 32)  # Enlarge legend labels
+        )
       ) +
-      theme_minimal()
+      labs(
+        title = 'Visualize Data by Transect',
+        subtitle = paste("Date:", input$date, "🔎 Hover over each transect to highlight line plot over time below 📈"),
+        fill = input$var  # Legend title
+      ) +
+      theme_minimal(base_size = 36) +  # Increase base font size
+      theme(
+        plot.title = element_text(size = 40, face = "bold"),
+        plot.subtitle = element_text(size = 36),
+        axis.title = element_blank(),  # Remove axis labels
+        axis.text = element_blank(),  # Remove axis ticks
+        axis.ticks = element_blank(),  # Remove axis ticks
+        legend.title = element_text(size = 36),  # Enlarge legend title
+        legend.text = element_text(size = 32)  # Enlarge legend text
+      )
   })
+  
   
   # Reactive value to store hovered transect
   hovered_transect <- reactiveVal(NULL)
@@ -124,8 +178,8 @@ server <- function(input, output, session) {
     
     # Generate time-series plot
     ggplot(transect_data, aes(x = date_time, y = .data[[input$var]], group = transect, color = highlight)) +
-      geom_line(size = 1.2, alpha = 0.7) +
-      geom_point(size = 2) +
+      geom_line(size = 2.5, alpha = 0.7) +  # Increase line thickness
+      geom_point(size = 4) +  # Increase point size
       scale_color_manual(values = c("Highlighted" = "steelblue", "Other" = "grey")) +  
       labs(
         title = "Time Series for All Transects",
@@ -133,11 +187,18 @@ server <- function(input, output, session) {
         x = "Date",
         y = input$var
       ) +
-      theme_minimal() +
-      theme(legend.position = "none")  # Hide legend for cleaner visualization
+      theme_minimal(base_size = 36) +  # Increase base font size
+      theme(
+        plot.title = element_text(size = 40, face = "bold"),
+        plot.subtitle = element_text(size = 36),
+        axis.title = element_text(size = 36),
+        axis.text = element_text(size = 32),
+        legend.title = element_text(size = 36),
+        legend.text = element_text(size = 32),
+        legend.position = "none"  # Hide legend for cleaner visualization
+      )
   })
 }
 
 # Run the application 
 shinyApp(ui = ui, server = server)
-
