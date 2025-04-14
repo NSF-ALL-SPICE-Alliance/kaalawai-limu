@@ -23,31 +23,43 @@ limu_density <- read_csv("data/limu_master_density.csv")
 kaalawai_joined <- st_read("data/kaalawai_data_with_transects_sf.gpkg")
 ```
 
-
 ```{r}
 limu_density <- limu_density %>% 
   clean_names() %>% 
   select(-x9, -x10, -x11, -x12)
 ```
 
-
 ```{r}
 limu_density$date_time <- mdy(limu_density$date_time)
 ```
 
+```{r}
+limu_density <- limu_density %>%
+  mutate(name = case_when(
+    str_starts(transect, "1") ~ "Transect 1",
+    str_starts(transect, "2") ~ "Transect 2",
+    str_starts(transect, "3") ~ "Transect 3",
+    str_starts(transect, "4") ~ "Transect 4",
+    str_starts(transect, "5") ~ "Transect 5",
+    TRUE ~ NA_character_
+  ))
+```
+
+```{r}
+limu_density <- limu_density %>%
+  select(-site, -transect) %>%  # Drop unwanted columns
+  group_by(name, date_time) %>%
+  summarise(across(where(is.numeric), ~ sum(., na.rm = TRUE)),
+            .groups = "drop")
+```
 
 ```{r}
 new_density_data_joined <- full_join(
   kaalawai_joined, 
-  limu_density, by=c("date_time", "transect", "site")
+  limu_density, by=c("date_time", "name")
 )
 ```
-
-
 
 ```{r}
 st_write(new_density_data_joined, here("data/kaalawai_data_limu_presence.gpkg"), delete_dsn = TRUE)
 ```
-
-
-

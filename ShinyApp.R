@@ -18,7 +18,6 @@ lat <<- 21.257
 
 kaalawai_joined_sf <- st_read(here("data/kaalawai_data_limu_presence.gpkg"))
 
-# Extract numeric columns for selection
 numeric_vars <- kaalawai_joined_sf %>%
   select(turbidity_ntu, salinity_psu, pH, density_g_cm3, temperature_C, depth_ft,
          conductivity_mS_cm, resistivity_ohm_cm, total_dissolved_solids_ppt, 
@@ -28,13 +27,11 @@ numeric_vars <- kaalawai_joined_sf %>%
          bryopsis_pennata) %>%
   colnames()
 
-# Extract unique dates
 dates <- unique(kaalawai_joined_sf$date_time)
 
 ui <- fluidPage(
   theme = bs_theme(version = 5, bootswatch = "sandstone"),
   
-  # Fallback FontAwesome
   tags$head(
     tags$link(rel = "stylesheet", href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css")
   ),
@@ -64,7 +61,6 @@ ui <- fluidPage(
   )
 )
 
-# Server ----
 server <- function(input, output, session) {
   
   basemap <- reactive({
@@ -81,13 +77,29 @@ server <- function(input, output, session) {
     
     ggmap(basemap()) +
       geom_sf(data = filtered_data(), aes_string(fill = input$var), color = "black", alpha = 0.5) +
-      scale_fill_viridis_c() +
+      scale_fill_viridis_c(
+        guide = guide_colourbar(
+          barwidth = 1.5,
+          barheight = 10,
+          title.theme = element_text(size = 16, face = "bold"),
+          label.theme = element_text(size = 14)
+        )
+      ) +
       labs(
         title = 'Visualize Data by Transect',
-        subtitle = paste("Date:", input$date),
+        subtitle = paste("Date:", input$date, "🔎 Hover over each transect to highlight line plot over time below 📈"),
         fill = input$var
       ) +
-      theme_minimal()
+      theme_minimal(base_size = 16) +
+      theme(
+        plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 16),
+        axis.title = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        legend.title = element_text(size = 16),
+        legend.text = element_text(size = 14)
+      )
   })
   
   hovered_transect <- reactiveVal(NULL)
@@ -99,7 +111,7 @@ server <- function(input, output, session) {
     kaalawai_joined_sf <- st_transform(kaalawai_joined_sf, crs = 4326)
     nearest_index <- st_nearest_feature(hover_point, kaalawai_joined_sf)
     if (!is.na(nearest_index)) {
-      hovered_transect(kaalawai_joined_sf$transect[nearest_index])
+      hovered_transect(kaalawai_joined_sf$name[nearest_index])
     }
   })
   
@@ -112,10 +124,10 @@ server <- function(input, output, session) {
     
     if (!is.null(selected_transect)) {
       transect_data <- transect_data %>%
-        mutate(highlight = ifelse(transect == selected_transect, "Highlighted", "Other"))
+        mutate(highlight = ifelse(name == selected_transect, "Highlighted", "Other"))
     }
     
-    ggplot(transect_data, aes(x = date_time, y = .data[[input$var]], group = transect, color = highlight)) +
+    ggplot(transect_data, aes(x = date_time, y = .data[[input$var]], group = name, color = highlight)) +
       geom_line() +
       geom_point() +
       scale_color_manual(values = c("Highlighted" = "steelblue", "Other" = "grey")) +
@@ -129,5 +141,4 @@ server <- function(input, output, session) {
   })
 }
 
-# Launch ----
 shinyApp(ui = ui, server = server)

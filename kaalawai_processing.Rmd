@@ -21,7 +21,6 @@ library(sf)
 kaalawai_data <- read_csv("data/kaalawai_variable_data.csv")
 ```
 
-
 ```{r}
 kaalawai_data <- kaalawai_data %>% 
   clean_names()
@@ -31,7 +30,6 @@ kaalawai_data <- kaalawai_data %>%
 kaalawai_data <- kaalawai_data %>% 
   select(-marked, -x21, -x22, -x23)
 ```
-
 
 ```{r}
 
@@ -75,9 +73,6 @@ kaalawai_data <- kaalawai_data %>%
   )
 ```
 
-
-
-
 ```{r}
 
 
@@ -108,10 +103,6 @@ kaalawai_data <- kaalawai_data %>%
 
 ```
 
-
-
-
-
 ```{r}
 # Load transect data from your CSV
 transects <- read_csv(here("data/Kaalawai-base1.csv"))
@@ -123,7 +114,6 @@ transects_sf <- st_as_sf(transects, wkt = "WKT", crs = 4326)
 print(transects_sf)
 
 ```
-
 
 ```{r}
 
@@ -151,6 +141,14 @@ class(kaalawai_data_with_transects)
 ```
 
 ```{r}
+kaalawai_data_with_transects <- kaalawai_data_with_transects %>%
+  select(-site) %>% 
+  group_by(name, date_time, WKT) %>%
+  summarise(across(where(is.numeric), ~ if (all(is.na(.))) NA_real_ else mean(., na.rm = TRUE)),
+            .groups = "drop")
+```
+
+```{r}
 kaalawai_data_with_transects_sf <- st_sf(kaalawai_data_with_transects, crs = 4326)
 ```
 
@@ -164,8 +162,6 @@ register_google("AIzaSyAVNo8B0Quo97QVBIzsIIJh6rQ0vu1J6k4", write = TRUE)
 basemap <- get_map(location = c(lon = lon, lat = lat), zoom = 19, source = "google", maptype = "satellite")
 ggmap(basemap)
 ```
-
-
 
 ```{r}
 p <- ggmap(basemap) +
@@ -183,5 +179,3 @@ p
 ```{r}
 st_write(kaalawai_data_with_transects_sf, here("data/kaalawai_data_with_transects_sf.gpkg"), delete_dsn = TRUE)
 ```
-
-
